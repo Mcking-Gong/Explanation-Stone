@@ -1,0 +1,11 @@
+{
+  "music": {
+    "category": "record",
+    "sounds": [
+      {
+        "name": "stonespeaker:music",
+        "stream": true
+      }
+    ]
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "block.stonespeaker.stone_speaker": "Explanation Stone",
+  "item.stonespeaker.raw_stone_helmet": "Raw Stone Helmet",
+  "item.stonespeaker.raw_stone_chestplate": "Raw Stone Armor",
+  "item.stonespeaker.raw_stone_leggings": "Raw Stone Leggings",
+  "item.stonespeaker.raw_stone_boots": "Raw Stone Boots",
+  "item.stonespeaker.usb_drive": "USB Drive",
+  "screen.stonespeaker.usb": "USB Music Library",
+  "screen.stonespeaker.usb.empty": "Put .ogg files into config/stonespeaker/music/",
+  "screen.stonespeaker.usb.more": "+%s more tracks (showing first 10)",
+  "tooltip.stonespeaker.usb_tracks": "Tracks: %s",
+  "tooltip.stonespeaker.usb_hint": "Right-click air to edit, right-click the stone to insert"
+}

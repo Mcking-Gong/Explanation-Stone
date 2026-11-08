@@ -1,0 +1,28 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+        // NeoForge 官方 maven 的 CDN 镜像（国内可直连）
+        maven { url = uri('https://neoforged.forgecdn.net/releases') }
+    }
+}
+
+rootProject.name = 'stonespeaker'
+
+// 官方 maven.neoforged.net 在国内不可达；
+// 用 forgecdn 镜像 + 工程内 tools/local-maven 兜底，并在项目创建时先注册，
+// 保证排在 ModDevGradle 自动添加的 maven.neoforged.net 之前。
+gradle.beforeProject { project ->
+    project.repositories.maven { repo ->
+        repo.name = 'NeoForgedCDN'
+        repo.url = uri('https://neoforged.forgecdn.net/releases')
+    }
+    project.repositories.maven { repo ->
+        repo.name = 'LocalOffline'
+        repo.url = uri("file:///${rootDir}/tools/local-maven")
+    }
+    project.repositories.maven { repo ->
+        repo.name = 'BMCLAPI'
+        repo.url = uri('https://bmclapi2.bangbang93.com/maven')
+    }
+}

@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "stonespeaker:item/raw_stone_boots"
+  }
+}
