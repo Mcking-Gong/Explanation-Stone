@@ -168,17 +168,24 @@ public final class ClientPlayback {
     }
 
     private static AudioData decode(Path path) {
-        try (AudioInputStream encoded = AudioSystem.getAudioInputStream(path.toFile())) {
-            AudioFormat base = encoded.getFormat();
-            // Vorbis SPI 先给出 VORBISENC 流，需要再转成 16bit PCM 才能给 Clip 播放
-            AudioFormat target = new AudioFormat(
-                    AudioFormat.Encoding.PCM_SIGNED,
-                    base.getSampleRate(), 16, base.getChannels(),
-                    base.getChannels() * 2, base.getSampleRate(), false);
-            try (AudioInputStream pcm = AudioSystem.getAudioInputStream(target, encoded)) {
-                ByteArrayOutputStream out = new ByteArrayOutputStream(1 << 20);
-                pcm.transferTo(out);
-                return new AudioData(target, out.toByteArray());
+        try {
+            // 直接实例化 provider，避免依赖 ServiceLoader（MOD 类加载器下不一定能扫描到 SPI）
+            com.github.trilarion.spi.vorbis.sampled.file.VorbisAudioFileReader reader =
+                    new com.github.trilarion.spi.vorbis.sampled.file.VorbisAudioFileReader();
+            try (AudioInputStream encoded = reader.getAudioInputStream(path.toFile())) {
+                AudioFormat base = encoded.getFormat();
+                // Vorbis 流需要再转成 16bit PCM 才能给 Clip 播放
+                AudioFormat target = new AudioFormat(
+                        AudioFormat.Encoding.PCM_SIGNED,
+                        base.getSampleRate(), 16, base.getChannels(),
+                        base.getChannels() * 2, base.getSampleRate(), false);
+                com.github.trilarion.spi.vorbis.sampled.convert.VorbisFormatConversionProvider provider =
+                        new com.github.trilarion.spi.vorbis.sampled.convert.VorbisFormatConversionProvider();
+                try (AudioInputStream pcm = provider.getAudioInputStream(target, encoded)) {
+                    ByteArrayOutputStream out = new ByteArrayOutputStream(1 << 20);
+                    pcm.transferTo(out);
+                    return new AudioData(target, out.toByteArray());
+                }
             }
         } catch (Throwable ignored) {
             return null;
