@@ -3,7 +3,7 @@
     "category": "record",
     "sounds": [
       {
-        "name": "stonespeaker:music",
+        "name": "explainationstone:music",
         "stream": true
       }
     ]

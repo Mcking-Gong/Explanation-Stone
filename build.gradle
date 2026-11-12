@@ -29,18 +29,17 @@ dependencies {
     implementation 'com.github.trilarion:vorbis-support:1.0.0'
 }
 
-// 把 vorbis-support（含 META-INF/services 的 SPI 注册）合并进发布 jar，
-// 否则正式环境里没有开发依赖会加载失败。
-tasks.named('jar') {
-    from({
-        configurations.runtimeClasspath
-                .findAll { it.name.startsWith('vorbis-support') }
-                .collect { zipTree(it) }
-    }) {
-        exclude 'META-INF/MANIFEST.MF'
-        exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA'
-    }
+// 把 vorbis-support 解包进主输出目录：
+// 开发运行时 MOD 类加载器只认 build/classes，发布 jar 也会自动带上这些类。
+def vorbisJars = configurations.runtimeClasspath.filter { it.name.startsWith('vorbis-support') }
+
+tasks.register('unpackVorbis', Copy) {
+    from { vorbisJars.collect { zipTree(it) } }
+    into layout.buildDirectory.dir('classes/java/main')
+    include 'com/github/trilarion/**'
+    include 'META-INF/services/**'
 }
+tasks.named('classes') { dependsOn tasks.named('unpackVorbis') }
 
 neoForge {
     version = project.neo_version

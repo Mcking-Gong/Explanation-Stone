@@ -6,6 +6,9 @@ import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -25,6 +28,10 @@ public class SpeakerBlockEntity extends BlockEntity {
     public void setTracks(List<String> newTracks) {
         this.tracks = List.copyOf(newTracks);
         this.setChanged();
+        if (this.level != null) {
+            // 同步给客户端，用于渲染方块上方的 U 盘模型
+            this.level.sendBlockUpdated(this.worldPosition, this.getBlockState(), this.getBlockState(), 3);
+        }
     }
 
     public boolean hasTracks() {
@@ -50,5 +57,15 @@ public class SpeakerBlockEntity extends BlockEntity {
             }
         }
         this.tracks = List.copyOf(loaded);
+    }
+
+    @Override
+    public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
+        return this.saveWithoutMetadata(registries);
+    }
+
+    @Override
+    public Packet<ClientGamePacketListener> getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
     }
 }

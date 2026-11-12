@@ -8,13 +8,13 @@ import java.util.stream.Stream;
 
 import net.neoforged.fml.loading.FMLPaths;
 
-/** 扫描 config/stonespeaker/music/*.ogg 曲库。 */
+/** 扫描 config/explainationstone/music/*.ogg 曲库。 */
 public final class UsbLibrary {
     private UsbLibrary() {
     }
 
     public static Path musicDir() {
-        return FMLPaths.CONFIGDIR.get().resolve("stonespeaker").resolve("music");
+        return FMLPaths.CONFIGDIR.get().resolve("explainationstone").resolve("music");
     }
 
     /** 返回曲库里的文件名（含 .ogg），按名字排序。 */

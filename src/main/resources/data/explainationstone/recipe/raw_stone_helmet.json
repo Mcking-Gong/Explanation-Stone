@@ -2,7 +2,7 @@
   "type": "minecraft:crafting_shaped",
   "category": "equipment",
   "pattern": [
-    "X X",
+    "XXX",
     "X X"
   ],
   "key": {
@@ -11,7 +11,7 @@
     }
   },
   "result": {
-    "id": "stonespeaker:raw_stone_boots",
+    "id": "explainationstone:raw_stone_helmet",
     "count": 1
   }
 }

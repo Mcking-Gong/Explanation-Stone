@@ -3,6 +3,7 @@
   "category": "equipment",
   "pattern": [
     "XXX",
+    "X X",
     "X X"
   ],
   "key": {
@@ -11,7 +12,7 @@
     }
   },
   "result": {
-    "id": "stonespeaker:raw_stone_helmet",
+    "id": "explainationstone:raw_stone_leggings",
     "count": 1
   }
 }

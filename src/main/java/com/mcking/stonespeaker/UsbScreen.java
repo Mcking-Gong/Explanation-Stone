@@ -4,6 +4,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import net.minecraft.Util;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
@@ -12,7 +13,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.PacketDistributor;
 
-/** U 盘歌单编辑界面：列出 config/stonespeaker/music 里的 .ogg，点击加入/移出歌单。 */
+/** U 盘歌单编辑界面：列出 config/explainationstone/music 里的 .ogg，点击加入/移出歌单。 */
 public class UsbScreen extends Screen {
     private static final int MAX_ROWS = 10;
 
@@ -21,7 +22,7 @@ public class UsbScreen extends Screen {
     private final List<String> available;
 
     public UsbScreen(ItemStack stack) {
-        super(Component.translatable("screen.stonespeaker.usb"));
+        super(Component.translatable("screen.explainationstone.usb"));
         this.stack = stack;
         this.selected.addAll(ModComponents.getPlaylist(stack));
         this.available = UsbLibrary.listTracks();
@@ -39,6 +40,10 @@ public class UsbScreen extends Screen {
                 button.setMessage(label(name));
             }).bounds(left, top + i * 22, 240, 20).build());
         }
+        this.addRenderableWidget(Button.builder(
+                Component.translatable("screen.explainationstone.usb.folder"),
+                button -> Util.getPlatform().openFile(UsbLibrary.musicDir().toFile()))
+                .bounds(this.width / 2 - 50, this.height - 60, 100, 20).build());
         this.addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, button -> this.onClose())
                 .bounds(this.width / 2 - 50, this.height - 35, 100, 20).build());
     }
@@ -59,11 +64,11 @@ public class UsbScreen extends Screen {
         graphics.drawCenteredString(this.font, this.title, this.width / 2, 18, 0xFFFFFF);
         if (this.available.isEmpty()) {
             graphics.drawCenteredString(this.font,
-                    Component.translatable("screen.stonespeaker.usb.empty"),
+                    Component.translatable("screen.explainationstone.usb.empty"),
                     this.width / 2, 60, 0xFF8080);
         } else if (this.available.size() > MAX_ROWS) {
             graphics.drawCenteredString(this.font,
-                    Component.translatable("screen.stonespeaker.usb.more", this.available.size() - MAX_ROWS),
+                    Component.translatable("screen.explainationstone.usb.more", this.available.size() - MAX_ROWS),
                     this.width / 2, this.height - 55, 0xAAAAAA);
         }
     }

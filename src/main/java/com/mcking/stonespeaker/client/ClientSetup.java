@@ -12,12 +12,18 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 
-/** 首次启动时把 mod 内置的音乐复制到 config/stonespeaker/music/，让默认曲目也能被 U 盘系统播放。 */
+/** 首次启动时把 mod 内置的音乐复制到 config/explainationstone/music/，让默认曲目也能被 U 盘系统播放。 */
 @EventBusSubscriber(modid = StoneSpeaker.MODID, value = Dist.CLIENT,
         bus = EventBusSubscriber.Bus.MOD)
 public final class ClientSetup {
     private ClientSetup() {
+    }
+
+    @SubscribeEvent
+    public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
+        event.registerBlockEntityRenderer(StoneSpeaker.SPEAKER_BE.get(), SpeakerRenderer::new);
     }
 
     @SubscribeEvent
@@ -29,7 +35,7 @@ public final class ClientSetup {
                 return;
             }
             try (InputStream in = StoneSpeaker.class.getResourceAsStream(
-                    "/assets/stonespeaker/sounds/music.ogg")) {
+                    "/assets/explainationstone/sounds/music.ogg")) {
                 if (in != null) {
                     Files.createDirectories(dir);
                     Files.copy(in, target);

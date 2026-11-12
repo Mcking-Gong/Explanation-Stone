@@ -22,7 +22,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 客户端播放：按方块坐标维护播放实例，曲目从 config/stonespeaker/music 读取，
+ * 客户端播放：按方块坐标维护播放实例，曲目从 config/explainationstone/music 读取，
  * 用 stb_vorbis 解码成 PCM，再由 Java Sound 播放；音量按听者距离衰减。
  */
 public final class ClientPlayback {
@@ -41,8 +41,7 @@ public final class ClientPlayback {
                     tracks.add(part.trim());
                 }
             }
-        }
-        if (tracks.isEmpty()) {
+        }        if (tracks.isEmpty()) {
             return;
         }
         Playing playing = new Playing(pos.immutable(), tracks);
@@ -113,8 +112,8 @@ public final class ClientPlayback {
                 newClip.start();
                 this.clip = newClip;
                 updateGain();
-            } catch (Throwable ignored) {
-                // 没有可用音频设备时静默跳过
+            } catch (Throwable t) {
+                System.out.println("[ES] clip failed: " + t);
             }
         }
 
@@ -187,7 +186,8 @@ public final class ClientPlayback {
                     return new AudioData(target, out.toByteArray());
                 }
             }
-        } catch (Throwable ignored) {
+        } catch (Throwable t) {
+            System.out.println("[ES] decode failed " + path + " : " + t);
             return null;
         }
     }

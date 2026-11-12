@@ -33,9 +33,9 @@ public class UsbDriveItem extends Item {
     public void appendHoverText(ItemStack stack, TooltipContext context,
                                 List<Component> tooltip, TooltipFlag flag) {
         int count = ModComponents.getPlaylist(stack).size();
-        tooltip.add(Component.translatable("tooltip.stonespeaker.usb_tracks", count)
+        tooltip.add(Component.translatable("tooltip.explainationstone.usb_tracks", count)
                 .withStyle(ChatFormatting.GRAY));
-        tooltip.add(Component.translatable("tooltip.stonespeaker.usb_hint")
+        tooltip.add(Component.translatable("tooltip.explainationstone.usb_hint")
                 .withStyle(ChatFormatting.DARK_GRAY));
     }
 }

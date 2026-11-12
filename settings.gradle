@@ -7,7 +7,7 @@ pluginManagement {
     }
 }
 
-rootProject.name = 'stonespeaker'
+rootProject.name = 'explainationstone'
 
 // 官方 maven.neoforged.net 在国内不可达；
 // 用 forgecdn 镜像 + 工程内 tools/local-maven 兜底，并在项目创建时先注册，

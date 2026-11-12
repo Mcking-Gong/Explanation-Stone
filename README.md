@@ -7,13 +7,14 @@ NeoForge 1.21.1 模组：一块会放音乐的石头，一个存歌单的 U 盘�
 ## 内容
 
 - **讲解石**：右键或红石信号播放音乐，信号消失/方块被破坏立即停止
-- **U 盘**：右键空气编辑歌单，右键讲解石插入播放；曲库放 `config/stonespeaker/music/*.ogg`
-- **原石铠**：圆石合成，唱片机 + 任意部件 = 讲解石
+- **U 盘**：右键空气编辑歌单，右键讲解石插入播放；曲库放 `config/explainationstone/music/*.ogg`
+- **原石铠**：圆石合成
+- **讲解石配方**：3×3 工作台，外围圆石、中间音符盒、下方红石粉；拿到圆石后自动解锁
 
 ## 构建
 
 ```bash
-gradlew build      # 产物 build/libs/stonespeaker-0.1.0.jar
+gradlew build      # 产物 build/libs/explainationstone-0.1.0.jar
 gradlew runClient  # 开发客户端
 ```
 

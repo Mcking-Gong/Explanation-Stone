@@ -1,11 +1,11 @@
 {
   "format_version": "1.21.1",
   "textures": {
-    "0": "stonespeaker:block/stone_light",
-    "1": "stonespeaker:block/stone_mid",
-    "2": "stonespeaker:block/stone_dark",
-    "4": "stonespeaker:block/grille",
-    "particle": "stonespeaker:block/stone_mid"
+    "0": "explainationstone:block/stone_light",
+    "1": "explainationstone:block/stone_mid",
+    "2": "explainationstone:block/stone_dark",
+    "4": "explainationstone:block/grille",
+    "particle": "explainationstone:block/stone_mid"
   },
   "elements": [
     {

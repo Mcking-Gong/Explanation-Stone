@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "stonespeaker:item/raw_stone_chestplate"
+    "layer0": "explainationstone:item/raw_stone_leggings"
   }
 }

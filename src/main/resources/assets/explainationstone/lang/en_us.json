@@ -1,0 +1,14 @@
+{
+  "block.explainationstone.stone_speaker": "Explanation Stone",
+  "item.explainationstone.raw_stone_helmet": "Raw Stone Helmet",
+  "item.explainationstone.raw_stone_chestplate": "Raw Stone Armor",
+  "item.explainationstone.raw_stone_leggings": "Raw Stone Leggings",
+  "item.explainationstone.raw_stone_boots": "Raw Stone Boots",
+  "item.explainationstone.usb_drive": "USB Drive",
+  "screen.explainationstone.usb": "USB Music Library",
+  "screen.explainationstone.usb.empty": "Put .ogg files into config/explainationstone/music/",
+  "screen.explainationstone.usb.more": "+%s more tracks (showing first 10)",
+  "tooltip.explainationstone.usb_tracks": "Tracks: %s",
+  "tooltip.explainationstone.usb_hint": "Right-click air to edit, right-click the stone to insert",
+  "screen.explainationstone.usb.folder": "Open Folder"
+}

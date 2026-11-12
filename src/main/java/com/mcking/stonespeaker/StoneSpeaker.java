@@ -58,7 +58,7 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 
 @Mod(StoneSpeaker.MODID)
 public final class StoneSpeaker {
-    public static final String MODID = "stonespeaker";
+    public static final String MODID = "explainationstone";
 
     public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(MODID);
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(MODID);

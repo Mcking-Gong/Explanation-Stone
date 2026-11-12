@@ -3,8 +3,7 @@
   "category": "equipment",
   "pattern": [
     "X X",
-    "XXX",
-    "XXX"
+    "X X"
   ],
   "key": {
     "X": {
@@ -12,7 +11,7 @@
     }
   },
   "result": {
-    "id": "stonespeaker:raw_stone_chestplate",
+    "id": "explainationstone:raw_stone_boots",
     "count": 1
   }
 }

@@ -1,33 +1,33 @@
 {
   "variants": {
     "facing=north,powered=false": {
-      "model": "stonespeaker:block/stone_speaker"
+      "model": "explainationstone:block/stone_speaker"
     },
     "facing=east,powered=false": {
-      "model": "stonespeaker:block/stone_speaker",
+      "model": "explainationstone:block/stone_speaker",
       "y": 90
     },
     "facing=south,powered=false": {
-      "model": "stonespeaker:block/stone_speaker",
+      "model": "explainationstone:block/stone_speaker",
       "y": 180
     },
     "facing=west,powered=false": {
-      "model": "stonespeaker:block/stone_speaker",
+      "model": "explainationstone:block/stone_speaker",
       "y": 270
     },
     "facing=north,powered=true": {
-      "model": "stonespeaker:block/stone_speaker"
+      "model": "explainationstone:block/stone_speaker"
     },
     "facing=east,powered=true": {
-      "model": "stonespeaker:block/stone_speaker",
+      "model": "explainationstone:block/stone_speaker",
       "y": 90
     },
     "facing=south,powered=true": {
-      "model": "stonespeaker:block/stone_speaker",
+      "model": "explainationstone:block/stone_speaker",
       "y": 180
     },
     "facing=west,powered=true": {
-      "model": "stonespeaker:block/stone_speaker",
+      "model": "explainationstone:block/stone_speaker",
       "y": 270
     }
   }
