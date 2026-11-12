@@ -10,5 +10,16 @@
   "screen.explainationstone.usb.more": "+%s more tracks (showing first 10)",
   "tooltip.explainationstone.usb_tracks": "Tracks: %s",
   "tooltip.explainationstone.usb_hint": "Right-click air to edit, right-click the stone to insert",
-  "screen.explainationstone.usb.folder": "Open Folder"
+  "screen.explainationstone.usb.folder": "Open Folder",
+  "screen.explainationstone.usb.play_mode": "Play: %s",
+  "screen.explainationstone.usb.action_mode": "Right: %s",
+  "screen.explainationstone.usb.redstone_mode": "Redstone: %s",
+  "screen.explainationstone.usb.eject": "Eject",
+  "screen.explainationstone.usb.mode.play.list": "Loop",
+  "screen.explainationstone.usb.mode.play.single": "Single",
+  "screen.explainationstone.usb.mode.play.shuffle": "Shuffle",
+  "screen.explainationstone.usb.mode.action.toggle_switch": "Toggle",
+  "screen.explainationstone.usb.mode.action.toggle_play": "Pause",
+  "screen.explainationstone.usb.mode.action.next": "Next",
+  "screen.explainationstone.usb.mode.action.disabled": "Disabled"
 }

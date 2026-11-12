@@ -10,5 +10,16 @@
   "screen.explainationstone.usb.more": "还有 %s 首未显示（只显示前 10 首）",
   "tooltip.explainationstone.usb_tracks": "曲目数：%s",
   "tooltip.explainationstone.usb_hint": "右键空气编辑歌单，右键讲解石插入",
-  "screen.explainationstone.usb.folder": "打开文件夹"
+  "screen.explainationstone.usb.folder": "打开文件夹",
+  "screen.explainationstone.usb.play_mode": "播放：%s",
+  "screen.explainationstone.usb.action_mode": "右键：%s",
+  "screen.explainationstone.usb.redstone_mode": "红石：%s",
+  "screen.explainationstone.usb.eject": "弹出",
+  "screen.explainationstone.usb.mode.play.list": "列表循环",
+  "screen.explainationstone.usb.mode.play.single": "单曲循环",
+  "screen.explainationstone.usb.mode.play.shuffle": "随机",
+  "screen.explainationstone.usb.mode.action.toggle_switch": "切换开关",
+  "screen.explainationstone.usb.mode.action.toggle_play": "切换播放",
+  "screen.explainationstone.usb.mode.action.next": "切歌",
+  "screen.explainationstone.usb.mode.action.disabled": "禁用"
 }

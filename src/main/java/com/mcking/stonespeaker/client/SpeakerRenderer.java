@@ -24,10 +24,11 @@ public class SpeakerRenderer implements BlockEntityRenderer<SpeakerBlockEntity> 
             return;
         }
         pose.pushPose();
-        pose.translate(0.5, 0.78, 0.5);
+        // U 盘竖直插在方块顶部，稍微朝向玩家
+        pose.translate(0.5, 0.91, 0.5);
         pose.mulPose(Axis.YP.rotationDegrees(45.0F));
-        pose.scale(0.5F, 0.5F, 0.5F);
-        // U 盘模型在 Blockbench 里中心大约在 (6.5, 8, 8)/16，这里把它挪到方块中心
+        pose.mulPose(Axis.ZP.rotationDegrees(90.0F));
+        pose.scale(0.4F, 0.4F, 0.4F);
         pose.translate(-0.406F, -0.5F, -0.5F);
         Minecraft.getInstance().getItemRenderer().renderStatic(
                 new ItemStack(StoneSpeaker.USB_DRIVE.get()),

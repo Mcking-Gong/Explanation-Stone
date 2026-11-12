@@ -11,13 +11,28 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
-/** U 盘上存的数据：歌单（用 \n 连接的文件名列表）。 */
+/** U 盘上存的数据：歌单、播放模式、右键模式、红石模式。 */
 public final class ModComponents {
     public static final DeferredRegister.DataComponents DATA_COMPONENTS =
             DeferredRegister.createDataComponents(StoneSpeaker.MODID);
 
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<String>> PLAYLIST =
             DATA_COMPONENTS.registerComponentType("playlist",
+                    builder -> builder.persistent(Codec.STRING)
+                            .networkSynchronized(ByteBufCodecs.STRING_UTF8));
+
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<String>> PLAY_MODE =
+            DATA_COMPONENTS.registerComponentType("play_mode",
+                    builder -> builder.persistent(Codec.STRING)
+                            .networkSynchronized(ByteBufCodecs.STRING_UTF8));
+
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<String>> ACTION_MODE =
+            DATA_COMPONENTS.registerComponentType("action_mode",
+                    builder -> builder.persistent(Codec.STRING)
+                            .networkSynchronized(ByteBufCodecs.STRING_UTF8));
+
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<String>> REDSTONE_MODE =
+            DATA_COMPONENTS.registerComponentType("redstone_mode",
                     builder -> builder.persistent(Codec.STRING)
                             .networkSynchronized(ByteBufCodecs.STRING_UTF8));
 
@@ -40,5 +55,26 @@ public final class ModComponents {
 
     public static void setPlaylist(ItemStack stack, List<String> tracks) {
         stack.set(PLAYLIST, String.join("\n", tracks));
+    }
+
+    public static String getPlayMode(ItemStack stack) {
+        String value = stack.get(PLAY_MODE);
+        return value == null || value.isEmpty() ? "list" : value;
+    }
+
+    public static String getActionMode(ItemStack stack) {
+        String value = stack.get(ACTION_MODE);
+        return value == null || value.isEmpty() ? "toggle_switch" : value;
+    }
+
+    public static String getRedstoneMode(ItemStack stack) {
+        String value = stack.get(REDSTONE_MODE);
+        return value == null || value.isEmpty() ? "toggle_switch" : value;
+    }
+
+    public static void setSettings(ItemStack stack, String playMode, String actionMode, String redstoneMode) {
+        stack.set(PLAY_MODE, playMode);
+        stack.set(ACTION_MODE, actionMode);
+        stack.set(REDSTONE_MODE, redstoneMode);
     }
 }

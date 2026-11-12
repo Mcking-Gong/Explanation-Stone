@@ -12,10 +12,14 @@ import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
-/** 讲解石保存插入的 U 盘歌单。 */
+/** 讲解石保存插入的 U 盘歌单与模式。 */
 public class SpeakerBlockEntity extends BlockEntity {
-    private static final String KEY = "Tracks";
     private List<String> tracks = List.of();
+    private String playMode = "list";
+    private String actionMode = "toggle_switch";
+    private String redstoneMode = "toggle_switch";
+    private boolean playing = false;
+    private boolean paused = false;
 
     public SpeakerBlockEntity(BlockPos pos, BlockState state) {
         super(StoneSpeaker.SPEAKER_BE.get(), pos, state);
@@ -25,29 +29,71 @@ public class SpeakerBlockEntity extends BlockEntity {
         return tracks;
     }
 
-    public void setTracks(List<String> newTracks) {
+    public String getPlayMode() {
+        return playMode;
+    }
+
+    public String getActionMode() {
+        return actionMode;
+    }
+
+    public String getRedstoneMode() {
+        return redstoneMode;
+    }
+
+    public boolean isPlaying() {
+        return playing;
+    }
+
+    public boolean isPaused() {
+        return paused;
+    }
+
+    public void setSettings(List<String> newTracks, String playMode, String actionMode, String redstoneMode) {
         this.tracks = List.copyOf(newTracks);
+        this.playMode = playMode;
+        this.actionMode = actionMode;
+        this.redstoneMode = redstoneMode;
+        this.playing = false;
+        this.paused = false;
         this.setChanged();
-        if (this.level != null) {
-            // 同步给客户端，用于渲染方块上方的 U 盘模型
-            this.level.sendBlockUpdated(this.worldPosition, this.getBlockState(), this.getBlockState(), 3);
+        sync();
+    }
+
+    public void setPlaying(boolean value) {
+        this.playing = value;
+        if (!value) {
+            this.paused = false;
         }
+    }
+
+    public void setPaused(boolean value) {
+        this.paused = value;
     }
 
     public boolean hasTracks() {
         return !this.tracks.isEmpty();
     }
 
+    private void sync() {
+        if (this.level != null) {
+            this.level.sendBlockUpdated(this.worldPosition, this.getBlockState(), this.getBlockState(), 3);
+        }
+    }
+
     @Override
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
-        tag.putString(KEY, String.join("\n", this.tracks));
+        tag.putString("Tracks", String.join("\n", this.tracks));
+        tag.putString("PlayMode", this.playMode);
+        tag.putString("ActionMode", this.actionMode);
+        tag.putString("RedstoneMode", this.redstoneMode);
     }
 
     @Override
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
-        String raw = tag.getString(KEY);
+        String raw = tag.getString("Tracks");
         List<String> loaded = new ArrayList<>();
         if (!raw.isEmpty()) {
             for (String part : raw.split("\n")) {
@@ -57,6 +103,9 @@ public class SpeakerBlockEntity extends BlockEntity {
             }
         }
         this.tracks = List.copyOf(loaded);
+        this.playMode = tag.contains("PlayMode") ? tag.getString("PlayMode") : "list";
+        this.actionMode = tag.contains("ActionMode") ? tag.getString("ActionMode") : "toggle_switch";
+        this.redstoneMode = tag.contains("RedstoneMode") ? tag.getString("RedstoneMode") : "toggle_switch";
     }
 
     @Override

@@ -160,15 +160,15 @@ public final class StoneSpeaker {
         PayloadRegistrar registrar = event.registrar("1");
         registrar.playToServer(SetPlaylistPayload.TYPE, SetPlaylistPayload.STREAM_CODEC,
                 StoneSpeaker::onSetPlaylist);
-        registrar.playToClient(PlayPlaylistPayload.TYPE, PlayPlaylistPayload.STREAM_CODEC,
+        registrar.playToClient(PlaylistSyncPayload.TYPE, PlaylistSyncPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(
-                        () -> ClientPlayback.play(payload.pos(), payload.tracks())));
-        registrar.playToClient(StopPlaylistPayload.TYPE, StopPlaylistPayload.STREAM_CODEC,
+                        () -> ClientPlayback.sync(payload.pos(), payload.tracks(), payload.playMode())));
+        registrar.playToClient(PlaylistCommandPayload.TYPE, PlaylistCommandPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(
-                        () -> ClientPlayback.stop(payload.pos())));
+                        () -> ClientPlayback.command(payload.pos(), payload.command())));
     }
 
-    /** 客户端保存 U 盘歌单。 */
+    /** 客户端保存 U 盘歌单与模式。 */
     private static void onSetPlaylist(SetPlaylistPayload payload, IPayloadContext context) {
         context.enqueueWork(() -> {
             if (!(context.player() instanceof ServerPlayer player)) {
@@ -184,6 +184,8 @@ public final class StoneSpeaker {
                 ItemStack stack = player.getItemInHand(hand);
                 if (stack.getItem() instanceof UsbDriveItem) {
                     ModComponents.setPlaylist(stack, tracks);
+                    ModComponents.setSettings(stack, payload.playMode(), payload.actionMode(),
+                            payload.redstoneMode());
                     break;
                 }
             }
@@ -253,32 +255,34 @@ public final class StoneSpeaker {
             return new SpeakerBlockEntity(pos, state);
         }
 
-        /** 拿 U 盘右键：把歌单写进讲解石并开始播放。 */
+        /** 拿 U 盘右键：把歌单与模式写进讲解石（不自动播放）。 */
         @Override
         protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos,
                                                   Player player, InteractionHand hand, BlockHitResult hitResult) {
             if (stack.getItem() instanceof UsbDriveItem) {
                 if (!level.isClientSide && level.getBlockEntity(pos) instanceof SpeakerBlockEntity speaker) {
-                    List<String> tracks = ModComponents.getPlaylist(stack);
-                    speaker.setTracks(tracks);
-                    sendPlay(level, pos, tracks);
+                    speaker.setSettings(ModComponents.getPlaylist(stack),
+                            ModComponents.getPlayMode(stack),
+                            ModComponents.getActionMode(stack),
+                            ModComponents.getRedstoneMode(stack));
+                    sendSync(level, pos, speaker.getTracks(), speaker.getPlayMode());
                 }
                 return ItemInteractionResult.sidedSuccess(level.isClientSide);
             }
             return super.useItemOn(stack, state, level, pos, player, hand, hitResult);
         }
 
-        /** 空手右键：有歌单就播歌单，否则播内置音乐。 */
+        /** 空手右键：按 U 盘的「右键模式」执行。 */
         @Override
         protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos,
                                                   Player player, BlockHitResult hitResult) {
             if (!level.isClientSide) {
-                sendPlay(level, pos, tracksAt(level, pos));
+                applyActionMode(level, pos);
             }
             return InteractionResult.sidedSuccess(level.isClientSide);
         }
 
-        /** 红石：有信号播放，没信号停止。 */
+        /** 红石：按 U 盘的「红石模式」执行。 */
         @Override
         protected void neighborChanged(BlockState state, Level level, BlockPos pos,
                                        Block neighborBlock, BlockPos neighborPos, boolean movedByPiston) {
@@ -286,12 +290,43 @@ public final class StoneSpeaker {
                 return;
             }
             boolean powered = level.hasNeighborSignal(pos);
-            if (powered != state.getValue(POWERED)) {
-                level.setBlock(pos, state.setValue(POWERED, powered), 3);
-                if (powered) {
-                    sendPlay(level, pos, tracksAt(level, pos));
-                } else {
-                    sendStop(level, pos);
+            if (powered == state.getValue(POWERED)) {
+                return;
+            }
+            level.setBlock(pos, state.setValue(POWERED, powered), 3);
+            if (!(level.getBlockEntity(pos) instanceof SpeakerBlockEntity speaker)) {
+                return;
+            }
+            if (!speaker.hasTracks()) {
+                sendSync(level, pos, List.of(DEFAULT_TRACK), "list");
+            }
+            switch (speaker.getRedstoneMode()) {
+                case "disabled" -> {
+                }
+                case "next" -> {
+                    if (powered) {
+                        sendCommand(level, pos, PlaylistCommandPayload.NEXT);
+                    }
+                }
+                case "toggle_play" -> {
+                    if (powered) {
+                        sendCommand(level, pos, PlaylistCommandPayload.PLAY);
+                        speaker.setPlaying(true);
+                        speaker.setPaused(false);
+                    } else {
+                        sendCommand(level, pos, PlaylistCommandPayload.TOGGLE_PAUSE);
+                        speaker.setPaused(true);
+                    }
+                }
+                default -> {
+                    if (powered) {
+                        sendCommand(level, pos, PlaylistCommandPayload.PLAY);
+                        speaker.setPlaying(true);
+                        speaker.setPaused(false);
+                    } else {
+                        sendCommand(level, pos, PlaylistCommandPayload.STOP);
+                        speaker.setPlaying(false);
+                    }
                 }
             }
         }
@@ -301,28 +336,52 @@ public final class StoneSpeaker {
         protected void onRemove(BlockState state, Level level, BlockPos pos,
                                 BlockState newState, boolean movedByPiston) {
             if (!level.isClientSide && !state.is(newState.getBlock())) {
-                sendStop(level, pos);
+                broadcastStop(level, pos);
             }
             super.onRemove(state, level, pos, newState, movedByPiston);
         }
 
-        private static List<String> tracksAt(Level level, BlockPos pos) {
-            if (level.getBlockEntity(pos) instanceof SpeakerBlockEntity speaker && speaker.hasTracks()) {
-                return speaker.getTracks();
+        private static void applyActionMode(Level level, BlockPos pos) {
+            if (!(level.getBlockEntity(pos) instanceof SpeakerBlockEntity speaker)) {
+                return;
             }
-            return List.of(DEFAULT_TRACK);
+            if (!speaker.hasTracks()) {
+                sendSync(level, pos, List.of(DEFAULT_TRACK), "list");
+            }
+            switch (speaker.getActionMode()) {
+                case "disabled" -> {
+                }
+                case "next" -> sendCommand(level, pos, PlaylistCommandPayload.NEXT);
+                case "toggle_play" -> {
+                    sendCommand(level, pos, PlaylistCommandPayload.TOGGLE_PAUSE);
+                    speaker.setPaused(!speaker.isPaused());
+                }
+                default -> {
+                    if (speaker.isPlaying()) {
+                        sendCommand(level, pos, PlaylistCommandPayload.STOP);
+                        speaker.setPlaying(false);
+                    } else {
+                        sendCommand(level, pos, PlaylistCommandPayload.PLAY);
+                        speaker.setPlaying(true);
+                    }
+                }
+            }
         }
 
-        private static void sendPlay(Level level, BlockPos pos, List<String> tracks) {
+        private static void sendSync(Level level, BlockPos pos, List<String> tracks, String playMode) {
+            PlaylistSyncPayload payload = new PlaylistSyncPayload(pos.immutable(),
+                    String.join("\n", tracks), playMode);
+            sendNear(level, pos, payload);
+        }
+
+        private static void sendCommand(Level level, BlockPos pos, int command) {
+            sendNear(level, pos, new PlaylistCommandPayload(pos.immutable(), command));
+        }
+
+        private static void sendNear(Level level, BlockPos pos, net.minecraft.network.protocol.common.custom.CustomPacketPayload payload) {
             if (!(level instanceof ServerLevel serverLevel)) {
                 return;
             }
-            if (tracks.isEmpty()) {
-                sendStop(level, pos);
-                return;
-            }
-            PlayPlaylistPayload payload = new PlayPlaylistPayload(pos.immutable(),
-                    String.join("\n", tracks));
             double cx = pos.getX() + 0.5;
             double cy = pos.getY() + 0.5;
             double cz = pos.getZ() + 0.5;
@@ -333,11 +392,12 @@ public final class StoneSpeaker {
             }
         }
 
-        private static void sendStop(Level level, BlockPos pos) {
+        private static void broadcastStop(Level level, BlockPos pos) {
             if (!(level instanceof ServerLevel serverLevel)) {
                 return;
             }
-            StopPlaylistPayload payload = new StopPlaylistPayload(pos.immutable());
+            PlaylistCommandPayload payload = new PlaylistCommandPayload(pos.immutable(),
+                    PlaylistCommandPayload.STOP);
             for (ServerPlayer player : serverLevel.players()) {
                 PacketDistributor.sendToPlayer(player, payload);
             }

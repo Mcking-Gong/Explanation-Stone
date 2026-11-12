@@ -1,11 +1,11 @@
 package com.mcking.stonespeaker.client;
 
 import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -15,6 +15,7 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.FloatControl;
 
+import com.mcking.stonespeaker.PlaylistCommandPayload;
 import com.mcking.stonespeaker.UsbLibrary;
 
 import net.minecraft.client.Minecraft;
@@ -22,37 +23,66 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 客户端播放：按方块坐标维护播放实例，曲目从 config/explainationstone/music 读取，
- * 用 stb_vorbis 解码成 PCM，再由 Java Sound 播放；音量按听者距离衰减。
+ * 客户端播放：按方块坐标维护歌单与播放实例，支持列表循环 / 单曲循环 / 随机、
+ * 暂停恢复、切歌与距离衰减。
  */
 public final class ClientPlayback {
+    private static final Map<BlockPos, Config> CONFIGS = new ConcurrentHashMap<>();
     private static final Map<BlockPos, Playing> PLAYING = new ConcurrentHashMap<>();
     private static final double RANGE = 64.0;
+    private static final Random RANDOM = new Random();
 
     private ClientPlayback() {
     }
 
-    public static void play(BlockPos pos, String rawTracks) {
-        stop(pos);
-        List<String> tracks = new ArrayList<>();
-        if (rawTracks != null && !rawTracks.isEmpty()) {
-            for (String part : rawTracks.split("\n")) {
-                if (!part.isBlank()) {
-                    tracks.add(part.trim());
-                }
-            }
-        }        if (tracks.isEmpty()) {
-            return;
-        }
-        Playing playing = new Playing(pos.immutable(), tracks);
-        PLAYING.put(pos.immutable(), playing);
-        playing.next();
+    public record Config(List<String> tracks, String playMode) {
     }
 
-    public static void stop(BlockPos pos) {
-        Playing playing = PLAYING.remove(pos);
+    public static void sync(BlockPos pos, String rawTracks, String playMode) {
+        BlockPos key = pos.immutable();
+        Config config = new Config(parseTracks(rawTracks), playMode);
+        CONFIGS.put(key, config);
+        Playing playing = PLAYING.get(key);
         if (playing != null) {
-            playing.close();
+            playing.updateConfig(config);
+        }
+    }
+
+    public static void command(BlockPos pos, int command) {
+        BlockPos key = pos.immutable();
+        switch (command) {
+            case PlaylistCommandPayload.PLAY -> {
+                Config config = CONFIGS.get(key);
+                if (config == null || config.tracks().isEmpty()) {
+                    return;
+                }
+                Playing playing = PLAYING.get(key);
+                if (playing == null) {
+                    playing = new Playing(key, config);
+                    PLAYING.put(key, playing);
+                }
+                playing.play();
+            }
+            case PlaylistCommandPayload.STOP -> {
+                Playing playing = PLAYING.remove(key);
+                if (playing != null) {
+                    playing.close();
+                }
+            }
+            case PlaylistCommandPayload.TOGGLE_PAUSE -> {
+                Playing playing = PLAYING.get(key);
+                if (playing != null) {
+                    playing.togglePause();
+                }
+            }
+            case PlaylistCommandPayload.NEXT -> {
+                Playing playing = PLAYING.get(key);
+                if (playing != null) {
+                    playing.next();
+                }
+            }
+            default -> {
+            }
         }
     }
 
@@ -61,9 +91,21 @@ public final class ClientPlayback {
             Playing playing = entry.getValue();
             playing.updateGain();
             if (playing.isFinished()) {
-                playing.next();
+                playing.onEnd();
             }
         }
+    }
+
+    private static List<String> parseTracks(String raw) {
+        List<String> tracks = new ArrayList<>();
+        if (raw != null && !raw.isEmpty()) {
+            for (String part : raw.split("\n")) {
+                if (!part.isBlank()) {
+                    tracks.add(part.trim());
+                }
+            }
+        }
+        return tracks;
     }
 
     private static double distanceTo(BlockPos pos) {
@@ -74,36 +116,102 @@ public final class ClientPlayback {
 
     private static final class Playing {
         private final BlockPos pos;
-        private final List<String> tracks;
+        private List<String> tracks;
+        private String playMode;
         private int index;
+        private int generation;
         private Clip clip;
+        private boolean paused;
         private boolean closed;
 
-        private Playing(BlockPos pos, List<String> tracks) {
+        private Playing(BlockPos pos, Config config) {
             this.pos = pos;
-            this.tracks = tracks;
+            this.tracks = config.tracks();
+            this.playMode = config.playMode();
+        }
+
+        private void updateConfig(Config config) {
+            this.tracks = config.tracks();
+            this.playMode = config.playMode();
+            if (this.index >= this.tracks.size()) {
+                this.index = 0;
+            }
+        }
+
+        private void play() {
+            if (this.closed || this.tracks.isEmpty()) {
+                return;
+            }
+            if (this.clip != null) {
+                if (this.paused) {
+                    this.clip.start();
+                    this.paused = false;
+                }
+                return;
+            }
+            this.index = Math.min(this.index, this.tracks.size() - 1);
+            startIndex(this.index);
+        }
+
+        private void togglePause() {
+            if (this.clip == null) {
+                play();
+                return;
+            }
+            if (this.clip.isRunning()) {
+                this.clip.stop();
+                this.paused = true;
+            } else {
+                this.clip.start();
+                this.paused = false;
+            }
         }
 
         private void next() {
+            if (this.tracks.isEmpty()) {
+                return;
+            }
+            startIndex(nextIndex());
+        }
+
+        private void onEnd() {
+            if ("single".equals(this.playMode) && this.tracks.size() > 1) {
+                startIndex(this.index);
+            } else {
+                startIndex(nextIndex());
+            }
+        }
+
+        private int nextIndex() {
+            if (this.tracks.size() <= 1) {
+                return 0;
+            }
+            if ("shuffle".equals(this.playMode)) {
+                int candidate = RANDOM.nextInt(this.tracks.size() - 1);
+                return candidate >= this.index ? candidate + 1 : candidate;
+            }
+            return (this.index + 1) % this.tracks.size();
+        }
+
+        private void startIndex(int newIndex) {
+            if (this.closed || this.tracks.isEmpty()) {
+                return;
+            }
+            this.index = Math.max(0, Math.min(newIndex, this.tracks.size() - 1));
+            this.generation++;
+            int token = this.generation;
             closeClip();
-            if (this.closed) {
-                return;
-            }
-            if (this.index >= this.tracks.size()) {
-                PLAYING.remove(this.pos, this);
-                return;
-            }
-            String name = this.tracks.get(this.index++);
-            Path path = UsbLibrary.trackPath(name);
+            this.paused = false;
+            Path path = UsbLibrary.trackPath(this.tracks.get(this.index));
             CompletableFuture.supplyAsync(() -> decode(path)).thenAccept(audio -> {
                 if (audio != null) {
-                    Minecraft.getInstance().execute(() -> start(audio));
+                    Minecraft.getInstance().execute(() -> startAudio(token, audio));
                 }
             });
         }
 
-        private void start(AudioData data) {
-            if (this.closed || PLAYING.get(this.pos) != this) {
+        private void startAudio(int token, AudioData data) {
+            if (this.closed || token != this.generation || PLAYING.get(this.pos) != this) {
                 return;
             }
             try {
@@ -119,7 +227,7 @@ public final class ClientPlayback {
 
         private boolean isFinished() {
             Clip current = this.clip;
-            if (current == null || this.closed) {
+            if (current == null || this.closed || this.paused) {
                 return false;
             }
             return !current.isRunning()
@@ -173,7 +281,6 @@ public final class ClientPlayback {
                     new com.github.trilarion.spi.vorbis.sampled.file.VorbisAudioFileReader();
             try (AudioInputStream encoded = reader.getAudioInputStream(path.toFile())) {
                 AudioFormat base = encoded.getFormat();
-                // Vorbis 流需要再转成 16bit PCM 才能给 Clip 播放
                 AudioFormat target = new AudioFormat(
                         AudioFormat.Encoding.PCM_SIGNED,
                         base.getSampleRate(), 16, base.getChannels(),
