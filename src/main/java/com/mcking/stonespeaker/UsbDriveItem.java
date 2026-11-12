@@ -30,6 +30,11 @@ public class UsbDriveItem extends Item {
     }
 
     @Override
+    public boolean isFoil(ItemStack stack) {
+        return !ModComponents.getPlaylist(stack).isEmpty();
+    }
+
+    @Override
     public void appendHoverText(ItemStack stack, TooltipContext context,
                                 List<Component> tooltip, TooltipFlag flag) {
         int count = ModComponents.getPlaylist(stack).size();

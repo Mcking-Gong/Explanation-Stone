@@ -6,9 +6,6 @@ import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.protocol.game.ClientGamePacketListener;
-import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -57,7 +54,6 @@ public class SpeakerBlockEntity extends BlockEntity {
         this.playing = false;
         this.paused = false;
         this.setChanged();
-        sync();
     }
 
     public void setPlaying(boolean value) {
@@ -73,12 +69,6 @@ public class SpeakerBlockEntity extends BlockEntity {
 
     public boolean hasTracks() {
         return !this.tracks.isEmpty();
-    }
-
-    private void sync() {
-        if (this.level != null) {
-            this.level.sendBlockUpdated(this.worldPosition, this.getBlockState(), this.getBlockState(), 3);
-        }
     }
 
     @Override
@@ -106,15 +96,5 @@ public class SpeakerBlockEntity extends BlockEntity {
         this.playMode = tag.contains("PlayMode") ? tag.getString("PlayMode") : "list";
         this.actionMode = tag.contains("ActionMode") ? tag.getString("ActionMode") : "toggle_switch";
         this.redstoneMode = tag.contains("RedstoneMode") ? tag.getString("RedstoneMode") : "toggle_switch";
-    }
-
-    @Override
-    public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
-        return this.saveWithoutMetadata(registries);
-    }
-
-    @Override
-    public Packet<ClientGamePacketListener> getUpdatePacket() {
-        return ClientboundBlockEntityDataPacket.create(this);
     }
 }

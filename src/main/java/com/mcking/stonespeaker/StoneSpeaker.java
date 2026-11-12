@@ -142,9 +142,6 @@ public final class StoneSpeaker {
     }
 
     private void addCreative(BuildCreativeModeTabContentsEvent event) {
-        if (event.getTabKey() == CreativeModeTabs.BUILDING_BLOCKS) {
-            event.accept(STONE_SPEAKER_ITEM.get());
-        }
         if (event.getTabKey() == CreativeModeTabs.COMBAT) {
             event.accept(RAW_STONE_HELMET.get());
             event.accept(RAW_STONE_CHESTPLATE.get());
@@ -152,6 +149,7 @@ public final class StoneSpeaker {
             event.accept(RAW_STONE_BOOTS.get());
         }
         if (event.getTabKey() == CreativeModeTabs.TOOLS_AND_UTILITIES) {
+            event.accept(STONE_SPEAKER_ITEM.get());
             event.accept(USB_DRIVE.get());
         }
     }
@@ -294,6 +292,10 @@ public final class StoneSpeaker {
                 return;
             }
             level.setBlock(pos, state.setValue(POWERED, powered), 3);
+            // 只在上升沿触发：脉冲或持续信号都只算一次
+            if (!powered) {
+                return;
+            }
             if (!(level.getBlockEntity(pos) instanceof SpeakerBlockEntity speaker)) {
                 return;
             }
@@ -303,29 +305,18 @@ public final class StoneSpeaker {
             switch (speaker.getRedstoneMode()) {
                 case "disabled" -> {
                 }
-                case "next" -> {
-                    if (powered) {
-                        sendCommand(level, pos, PlaylistCommandPayload.NEXT);
-                    }
-                }
+                case "next" -> sendCommand(level, pos, PlaylistCommandPayload.NEXT);
                 case "toggle_play" -> {
-                    if (powered) {
-                        sendCommand(level, pos, PlaylistCommandPayload.PLAY);
-                        speaker.setPlaying(true);
-                        speaker.setPaused(false);
-                    } else {
-                        sendCommand(level, pos, PlaylistCommandPayload.TOGGLE_PAUSE);
-                        speaker.setPaused(true);
-                    }
+                    sendCommand(level, pos, PlaylistCommandPayload.TOGGLE_PAUSE);
+                    speaker.setPaused(!speaker.isPaused());
                 }
                 default -> {
-                    if (powered) {
-                        sendCommand(level, pos, PlaylistCommandPayload.PLAY);
-                        speaker.setPlaying(true);
-                        speaker.setPaused(false);
-                    } else {
+                    if (speaker.isPlaying()) {
                         sendCommand(level, pos, PlaylistCommandPayload.STOP);
                         speaker.setPlaying(false);
+                    } else {
+                        sendCommand(level, pos, PlaylistCommandPayload.PLAY);
+                        speaker.setPlaying(true);
                     }
                 }
             }
