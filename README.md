@@ -1,15 +1,28 @@
 # Explanation Stone（讲解石）
+![Static Badge](https://img.shields.io/badge/Build-Passing-green?logo=github)
+![Static Badge](https://img.shields.io/badge/License-MIT-blue)
+![Static Badge](https://img.shields.io/badge/Minecraft-1.21.1-green)
+![Static Badge](https://img.shields.io/badge/Neoforge-1.21.1%2B-orange)
 
-![Explanation Stone](screenshots/header.png)
+![Explanation Stone](screenshots/items.png)
 
 NeoForge 1.21.1 模组：一块会放音乐的石头，一个存歌单的 U 盘，还有一套原石铠。
 
 ## 内容
 
-- **讲解石**：右键或红石信号播放音乐，信号消失/方块被破坏立即停止
-- **U 盘**：铁锭 + 红石粉合成；右键空气编辑歌单（勾选、排序、播放模式、右键/红石模式），右键讲解石插入（不会自动播放）；曲库放 `config/explainationstone/music/*.ogg`
+- **讲解石**：播放音乐的石头，使用音符盒、原石和红石粉合成
+- **U 盘**：铁锭 + 红石粉合成；右键空气编辑歌单（勾选、排序、播放模式、右键/红石模式），右键讲解石插入；曲库放 `config/explainationstone/music/*.ogg`
 - **原石铠**：圆石合成
-- **讲解石配方**：3×3 工作台，外围圆石、中间音符盒、下方红石粉；拿到圆石后自动解锁
+
+
+|物品|配方|
+|-|-|
+|讲解石|![Recipie](/screenshots/speaker_recipie.png)|
+|U盘|![Recipie](/screenshots/usb_recipie.png)|
+|原石头盔|![Recipie](/screenshots/helmet_recipie.png)|
+|原石铠|![Recipie](/screenshots/chestplate_recipie.png)|
+|原石护腿|![Recipie](/screenshots/leggings_recipie.png)|
+|原石靴子|![Recipie](/screenshots/boots_recipie.png)|
 
 ## 构建
 
@@ -22,6 +35,5 @@ gradlew runClient  # 开发客户端
 
 ## 许可证
 
-MIT。音频解码使用 [vorbis-support](https://github.com/Trilarion/vorbis-support)（LGPL-2.1，已打包进 jar）。
-
-模型与贴图由 Mcking 制作（Blockbench）。
+MIT
+音频解码使用 [vorbis-support](https://github.com/Trilarion/vorbis-support)（LGPL-2.1，已打包进 jar）。
