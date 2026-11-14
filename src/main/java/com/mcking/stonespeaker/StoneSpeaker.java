@@ -160,7 +160,8 @@ public final class StoneSpeaker {
                 StoneSpeaker::onSetPlaylist);
         registrar.playToClient(PlaylistSyncPayload.TYPE, PlaylistSyncPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(
-                        () -> ClientPlayback.sync(payload.pos(), payload.tracks(), payload.playMode())));
+                        () -> ClientPlayback.sync(payload.pos(), payload.tracks(), payload.playMode(),
+                                payload.range())));
         registrar.playToClient(PlaylistCommandPayload.TYPE, PlaylistCommandPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(
                         () -> ClientPlayback.command(payload.pos(), payload.command())));
@@ -183,7 +184,7 @@ public final class StoneSpeaker {
                 if (stack.getItem() instanceof UsbDriveItem) {
                     ModComponents.setPlaylist(stack, tracks);
                     ModComponents.setSettings(stack, payload.playMode(), payload.actionMode(),
-                            payload.redstoneMode());
+                            payload.redstoneMode(), payload.range());
                     break;
                 }
             }
@@ -262,8 +263,9 @@ public final class StoneSpeaker {
                     speaker.setSettings(ModComponents.getPlaylist(stack),
                             ModComponents.getPlayMode(stack),
                             ModComponents.getActionMode(stack),
-                            ModComponents.getRedstoneMode(stack));
-                    sendSync(level, pos, speaker.getTracks(), speaker.getPlayMode());
+                            ModComponents.getRedstoneMode(stack),
+                            ModComponents.getRange(stack));
+                    sendSync(level, pos, speaker.getTracks(), speaker.getPlayMode(), speaker.getRange());
                 }
                 return ItemInteractionResult.sidedSuccess(level.isClientSide);
             }
@@ -300,7 +302,7 @@ public final class StoneSpeaker {
                 return;
             }
             if (!speaker.hasTracks()) {
-                sendSync(level, pos, List.of(DEFAULT_TRACK), "list");
+                sendSync(level, pos, List.of(DEFAULT_TRACK), "list", ModComponents.DEFAULT_RANGE);
             }
             switch (speaker.getRedstoneMode()) {
                 case "disabled" -> {
@@ -337,7 +339,7 @@ public final class StoneSpeaker {
                 return;
             }
             if (!speaker.hasTracks()) {
-                sendSync(level, pos, List.of(DEFAULT_TRACK), "list");
+                sendSync(level, pos, List.of(DEFAULT_TRACK), "list", ModComponents.DEFAULT_RANGE);
             }
             switch (speaker.getActionMode()) {
                 case "disabled" -> {
@@ -359,9 +361,9 @@ public final class StoneSpeaker {
             }
         }
 
-        private static void sendSync(Level level, BlockPos pos, List<String> tracks, String playMode) {
+        private static void sendSync(Level level, BlockPos pos, List<String> tracks, String playMode, int range) {
             PlaylistSyncPayload payload = new PlaylistSyncPayload(pos.immutable(),
-                    String.join("\n", tracks), playMode);
+                    String.join("\n", tracks), playMode, range);
             sendNear(level, pos, payload);
         }
 

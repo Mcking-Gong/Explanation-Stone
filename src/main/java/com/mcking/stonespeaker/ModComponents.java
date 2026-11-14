@@ -36,6 +36,14 @@ public final class ModComponents {
                     builder -> builder.persistent(Codec.STRING)
                             .networkSynchronized(ByteBufCodecs.STRING_UTF8));
 
+    /** 声音传播距离（格），越大传得越远。 */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> RANGE =
+            DATA_COMPONENTS.registerComponentType("range",
+                    builder -> builder.persistent(Codec.INT)
+                            .networkSynchronized(ByteBufCodecs.VAR_INT));
+
+    public static final int DEFAULT_RANGE = 16;
+
     private ModComponents() {
     }
 
@@ -72,9 +80,15 @@ public final class ModComponents {
         return value == null || value.isEmpty() ? "toggle_switch" : value;
     }
 
-    public static void setSettings(ItemStack stack, String playMode, String actionMode, String redstoneMode) {
+    public static int getRange(ItemStack stack) {
+        Integer value = stack.get(RANGE);
+        return value == null || value <= 0 ? DEFAULT_RANGE : value;
+    }
+
+    public static void setSettings(ItemStack stack, String playMode, String actionMode, String redstoneMode, int range) {
         stack.set(PLAY_MODE, playMode);
         stack.set(ACTION_MODE, actionMode);
         stack.set(REDSTONE_MODE, redstoneMode);
+        stack.set(RANGE, range);
     }
 }

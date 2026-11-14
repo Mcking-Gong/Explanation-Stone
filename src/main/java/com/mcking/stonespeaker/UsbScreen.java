@@ -13,11 +13,11 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.PacketDistributor;
 
-/** U 盘歌单界面：勾选曲目、上下调整顺序、播放模式 / 右键模式 / 红石模式、打开文件夹、弹出保存。 */
+/** U 盘界面：勾选/排序曲目，设置播放模式、传播距离、右键/红石模式。 */
 public class UsbScreen extends Screen {
-    private static final int VISIBLE_ROWS = 7;
     private static final String[] PLAY_MODES = {"list", "single", "shuffle"};
     private static final String[] ACTION_MODES = {"toggle_switch", "toggle_play", "next", "disabled"};
+    private static final int[] RANGES = {8, 16, 24, 32, 48, 64};
 
     private final ItemStack stack;
     private final List<String> rows = new ArrayList<>();
@@ -25,6 +25,7 @@ public class UsbScreen extends Screen {
     private String playMode;
     private String actionMode;
     private String redstoneMode;
+    private int range;
     private int scroll;
 
     public UsbScreen(ItemStack stack) {
@@ -35,6 +36,7 @@ public class UsbScreen extends Screen {
         this.playMode = ModComponents.getPlayMode(stack);
         this.actionMode = ModComponents.getActionMode(stack);
         this.redstoneMode = ModComponents.getRedstoneMode(stack);
+        this.range = ModComponents.getRange(stack);
     }
 
     @Override
@@ -44,11 +46,13 @@ public class UsbScreen extends Screen {
 
     private void rebuild() {
         this.clearWidgets();
-        int left = this.width / 2 - 120;
-        int top = 34;
-        int end = Math.min(this.rows.size(), this.scroll + VISIBLE_ROWS);
+        int left = this.width / 2 - 121;
+        int top = 28;
+        int rowHeight = 18;
+        int maxRows = Math.max(3, Math.min(8, (this.height - 120 - top) / rowHeight));
+        int end = Math.min(this.rows.size(), this.scroll + maxRows);
         for (int i = this.scroll; i < end; i++) {
-            int y = top + (i - this.scroll) * 20;
+            int y = top + (i - this.scroll) * rowHeight;
             String name = this.rows.get(i);
             final int index = i;
             this.addRenderableWidget(Button.builder(rowLabel(name), button -> {
@@ -58,37 +62,45 @@ public class UsbScreen extends Screen {
                 rebuild();
             }).bounds(left, y, 190, 18).build());
             this.addRenderableWidget(Button.builder(Component.literal("↑"), button -> move(index, -1))
-                    .bounds(left + 196, y, 18, 18).build());
+                    .bounds(left + 194, y, 18, 18).build());
             this.addRenderableWidget(Button.builder(Component.literal("↓"), button -> move(index, 1))
-                    .bounds(left + 218, y, 18, 18).build());
+                    .bounds(left + 214, y, 18, 18).build());
         }
 
-        int bottom = this.height - 62;
+        int row1 = this.height - 64;
+        int row2 = this.height - 42;
+        int row3 = this.height - 20;
         this.addRenderableWidget(Button.builder(
-                Component.translatable("screen.explainationstone.usb.play_mode", modeLabel("play." + this.playMode)),
+                Component.translatable("screen.explainationstone.usb.play_mode", mode("play." + this.playMode)),
                 button -> {
                     this.playMode = cycle(PLAY_MODES, this.playMode);
                     rebuild();
-                }).bounds(left, bottom - 44, 118, 20).build());
+                }).bounds(left, row1, 118, 20).build());
         this.addRenderableWidget(Button.builder(
-                Component.translatable("screen.explainationstone.usb.action_mode", modeLabel("action." + this.actionMode)),
+                Component.translatable("screen.explainationstone.usb.range", this.range),
+                button -> {
+                    this.range = cycleRange(this.range);
+                    rebuild();
+                }).bounds(left + 124, row1, 118, 20).build());
+        this.addRenderableWidget(Button.builder(
+                Component.translatable("screen.explainationstone.usb.action_mode", mode("action." + this.actionMode)),
                 button -> {
                     this.actionMode = cycle(ACTION_MODES, this.actionMode);
                     rebuild();
-                }).bounds(left + 124, bottom - 44, 118, 20).build());
+                }).bounds(left, row2, 118, 20).build());
         this.addRenderableWidget(Button.builder(
-                Component.translatable("screen.explainationstone.usb.redstone_mode", modeLabel("action." + this.redstoneMode)),
+                Component.translatable("screen.explainationstone.usb.redstone_mode", mode("action." + this.redstoneMode)),
                 button -> {
                     this.redstoneMode = cycle(ACTION_MODES, this.redstoneMode);
                     rebuild();
-                }).bounds(left, bottom - 20, 160, 20).build());
+                }).bounds(left + 124, row2, 118, 20).build());
         this.addRenderableWidget(Button.builder(
                 Component.translatable("screen.explainationstone.usb.folder"),
                 button -> Util.getPlatform().openFile(UsbLibrary.musicDir().toFile()))
-                .bounds(left + 166, bottom - 20, 72, 20).build());
+                .bounds(left, row3, 118, 20).build());
         this.addRenderableWidget(Button.builder(
                 Component.translatable("screen.explainationstone.usb.eject"), button -> this.onClose())
-                .bounds(this.width / 2 - 40, bottom + 4, 80, 20).build());
+                .bounds(left + 124, row3, 118, 20).build());
     }
 
     private void move(int index, int delta) {
@@ -110,7 +122,16 @@ public class UsbScreen extends Screen {
         return values[0];
     }
 
-    private static Component modeLabel(String key) {
+    private static int cycleRange(int current) {
+        for (int i = 0; i < RANGES.length; i++) {
+            if (RANGES[i] == current) {
+                return RANGES[(i + 1) % RANGES.length];
+            }
+        }
+        return RANGES[1];
+    }
+
+    private static Component mode(String key) {
         return Component.translatable("screen.explainationstone.usb.mode." + key);
     }
 
@@ -130,7 +151,7 @@ public class UsbScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        int maxScroll = Math.max(0, this.rows.size() - VISIBLE_ROWS);
+        int maxScroll = Math.max(0, this.rows.size() - Math.max(3, Math.min(8, (this.height - 120 - 28) / 18)));
         int next = Math.max(0, Math.min(maxScroll, this.scroll - (int) Math.signum(scrollY)));
         if (next != this.scroll) {
             this.scroll = next;
@@ -143,22 +164,18 @@ public class UsbScreen extends Screen {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         super.render(graphics, mouseX, mouseY, partialTick);
-        graphics.drawCenteredString(this.font, this.title, this.width / 2, 16, 0xFFFFFF);
+        graphics.drawCenteredString(this.font, this.title, this.width / 2, 12, 0xFFFFFF);
         if (this.rows.isEmpty()) {
             graphics.drawCenteredString(this.font,
                     Component.translatable("screen.explainationstone.usb.empty"),
-                    this.width / 2, 60, 0xFF8080);
-        } else if (this.rows.size() > VISIBLE_ROWS) {
-            graphics.drawCenteredString(this.font,
-                    Component.translatable("screen.explainationstone.usb.more", this.rows.size() - VISIBLE_ROWS),
-                    this.width / 2, this.height - 86, 0xAAAAAA);
+                    this.width / 2, 40, 0xFF8080);
         }
     }
 
     @Override
     public void onClose() {
         PacketDistributor.sendToServer(new SetPlaylistPayload(String.join("\n", playlist()),
-                this.playMode, this.actionMode, this.redstoneMode));
+                this.playMode, this.actionMode, this.redstoneMode, this.range));
         super.onClose();
     }
 }

@@ -21,5 +21,6 @@
   "screen.explainationstone.usb.mode.action.toggle_switch": "切换开关",
   "screen.explainationstone.usb.mode.action.toggle_play": "切换播放",
   "screen.explainationstone.usb.mode.action.next": "切歌",
-  "screen.explainationstone.usb.mode.action.disabled": "禁用"
+  "screen.explainationstone.usb.mode.action.disabled": "禁用",
+  "screen.explainationstone.usb.range": "距离：%s"
 }

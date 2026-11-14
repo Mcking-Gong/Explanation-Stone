@@ -35,12 +35,12 @@ public final class ClientPlayback {
     private ClientPlayback() {
     }
 
-    public record Config(List<String> tracks, String playMode) {
+    public record Config(List<String> tracks, String playMode, int range) {
     }
 
-    public static void sync(BlockPos pos, String rawTracks, String playMode) {
+    public static void sync(BlockPos pos, String rawTracks, String playMode, int range) {
         BlockPos key = pos.immutable();
-        Config config = new Config(parseTracks(rawTracks), playMode);
+        Config config = new Config(parseTracks(rawTracks), playMode, Math.max(4, range));
         CONFIGS.put(key, config);
         Playing playing = PLAYING.get(key);
         if (playing != null) {
@@ -118,6 +118,7 @@ public final class ClientPlayback {
         private final BlockPos pos;
         private List<String> tracks;
         private String playMode;
+        private int range;
         private int index;
         private int generation;
         private Clip clip;
@@ -128,11 +129,13 @@ public final class ClientPlayback {
             this.pos = pos;
             this.tracks = config.tracks();
             this.playMode = config.playMode();
+            this.range = config.range();
         }
 
         private void updateConfig(Config config) {
             this.tracks = config.tracks();
             this.playMode = config.playMode();
+            this.range = config.range();
             if (this.index >= this.tracks.size()) {
                 this.index = 0;
             }
@@ -241,7 +244,7 @@ public final class ClientPlayback {
             }
             try {
                 FloatControl control = (FloatControl) current.getControl(FloatControl.Type.MASTER_GAIN);
-                double volume = Math.max(0.0, 1.0 - distanceTo(this.pos) / RANGE);
+                double volume = Math.max(0.0, 1.0 - distanceTo(this.pos) / Math.max(4, this.range));
                 if (volume <= 0.0) {
                     control.setValue(control.getMinimum());
                     return;

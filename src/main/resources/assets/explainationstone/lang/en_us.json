@@ -21,5 +21,6 @@
   "screen.explainationstone.usb.mode.action.toggle_switch": "Toggle",
   "screen.explainationstone.usb.mode.action.toggle_play": "Pause",
   "screen.explainationstone.usb.mode.action.next": "Next",
-  "screen.explainationstone.usb.mode.action.disabled": "Disabled"
+  "screen.explainationstone.usb.mode.action.disabled": "Disabled",
+  "screen.explainationstone.usb.range": "Range: %s"
 }

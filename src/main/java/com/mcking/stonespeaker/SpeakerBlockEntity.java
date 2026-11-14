@@ -15,6 +15,7 @@ public class SpeakerBlockEntity extends BlockEntity {
     private String playMode = "list";
     private String actionMode = "toggle_switch";
     private String redstoneMode = "toggle_switch";
+    private int range = 16;
     private boolean playing = false;
     private boolean paused = false;
 
@@ -38,6 +39,10 @@ public class SpeakerBlockEntity extends BlockEntity {
         return redstoneMode;
     }
 
+    public int getRange() {
+        return range;
+    }
+
     public boolean isPlaying() {
         return playing;
     }
@@ -46,11 +51,13 @@ public class SpeakerBlockEntity extends BlockEntity {
         return paused;
     }
 
-    public void setSettings(List<String> newTracks, String playMode, String actionMode, String redstoneMode) {
+    public void setSettings(List<String> newTracks, String playMode, String actionMode, String redstoneMode,
+                            int range) {
         this.tracks = List.copyOf(newTracks);
         this.playMode = playMode;
         this.actionMode = actionMode;
         this.redstoneMode = redstoneMode;
+        this.range = range;
         this.playing = false;
         this.paused = false;
         this.setChanged();
@@ -78,6 +85,7 @@ public class SpeakerBlockEntity extends BlockEntity {
         tag.putString("PlayMode", this.playMode);
         tag.putString("ActionMode", this.actionMode);
         tag.putString("RedstoneMode", this.redstoneMode);
+        tag.putInt("Range", this.range);
     }
 
     @Override
@@ -96,5 +104,6 @@ public class SpeakerBlockEntity extends BlockEntity {
         this.playMode = tag.contains("PlayMode") ? tag.getString("PlayMode") : "list";
         this.actionMode = tag.contains("ActionMode") ? tag.getString("ActionMode") : "toggle_switch";
         this.redstoneMode = tag.contains("RedstoneMode") ? tag.getString("RedstoneMode") : "toggle_switch";
+        this.range = tag.contains("Range") ? tag.getInt("Range") : 16;
     }
 }
